@@ -25,8 +25,8 @@ const CompareQuotation = () => {
           quotationApi.getQuotationsByIntent(intentId),
           intentApi.getIntentById(intentId),
         ]);
-        setQuotations(quoteRes.data?.quotations || quoteRes.data || []);
-        setIntent(intentRes.data?.intent || intentRes.data || null);
+        setQuotations(quoteRes.data?.data?.quotations || quoteRes.data?.quotations || []);
+        setIntent(intentRes.data?.data?.intent || intentRes.data?.intent || null);
       } catch (err) {
         console.error('Failed to load quotations:', err);
       } finally {
@@ -37,7 +37,7 @@ const CompareQuotation = () => {
   }, [intentId]);
 
   const formatCurrency = (amount) => {
-    return Number(amount || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    return Number(amount || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
   };
 
   const handleSelectClick = (quotation) => {
@@ -49,11 +49,10 @@ const CompareQuotation = () => {
     if (!selectedQuotation) return;
     setActionLoading(true);
     try {
-      await quotationApi.selectSupplier(selectedQuotation._id);
       setShowConfirm(false);
-      navigate(`/intents/${intentId}/select-supplier/${selectedQuotation._id}`);
+      navigate(`${navPrefix}/quotations/select/${intentId}/${selectedQuotation._id}`);
     } catch (err) {
-      console.error('Failed to select supplier:', err);
+      console.error('Failed to navigate:', err);
     } finally {
       setActionLoading(false);
     }

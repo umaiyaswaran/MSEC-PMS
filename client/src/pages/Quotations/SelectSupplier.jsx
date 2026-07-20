@@ -23,10 +23,10 @@ const SelectSupplier = () => {
           quotationApi.getQuotationsByIntent(intentId),
           intentApi.getIntentById(intentId),
         ]);
-        const quotes = quoteRes.data?.quotations || quoteRes.data || [];
+        const quotes = quoteRes.data?.data?.quotations || quoteRes.data?.quotations || [];
         const found = quotes.find((q) => q._id === quotationId);
         setQuotation(found || null);
-        setIntent(intentRes.data?.intent || intentRes.data || null);
+        setIntent(intentRes.data?.data?.intent || intentRes.data?.intent || null);
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to load data');
       } finally {
@@ -49,7 +49,7 @@ const SelectSupplier = () => {
   };
 
   const formatCurrency = (amount) => {
-    return Number(amount || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    return Number(amount || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
   };
 
   if (loading) return <Loader message="Loading quotation details..." />;

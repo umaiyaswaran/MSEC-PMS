@@ -10,6 +10,8 @@ export default function OriginalPO() {
   const [po, setPo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notifyLoading, setNotifyLoading] = useState(false);
+  const [notifyMsg, setNotifyMsg] = useState('');
 
   useEffect(() => {
     fetchPO();
@@ -19,11 +21,25 @@ export default function OriginalPO() {
     try {
       setLoading(true);
       const response = await purchaseOrderApi.getPOById(id);
-      setPo(response.data?.data || response.data);
+      const wrapper = response.data?.data || response.data;
+      setPo(wrapper?.purchaseOrder || wrapper);
     } catch (err) {
       setError(err.message || 'Failed to load purchase order');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleNotifyStoreManager = async () => {
+    try {
+      setNotifyLoading(true);
+      setNotifyMsg('');
+      const response = await purchaseOrderApi.notifyStoreManager(id);
+      setNotifyMsg(response.data?.message || 'Store managers notified successfully');
+    } catch (err) {
+      setNotifyMsg(err.response?.data?.message || 'Failed to notify store manager');
+    } finally {
+      setNotifyLoading(false);
     }
   };
 
@@ -111,7 +127,7 @@ export default function OriginalPO() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-6 no-print">
+        <div className="flex items-center justify-between mb-6 no-print">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Original Purchase Order</h1>
           <p className="text-sm text-gray-500 mt-1">Official PO sent to supplier</p>
@@ -123,6 +139,18 @@ export default function OriginalPO() {
           <span className={`text-sm font-medium ${sentStatus.color}`}>
             {sentStatus.label}
           </span>
+          {user?.role === 'admin' && po.status === 'APPROVED' && !notifyMsg && (
+            <button
+              onClick={handleNotifyStoreManager}
+              disabled={notifyLoading}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
+            >
+              {notifyLoading ? 'Sending...' : 'Send to Store Manager'}
+            </button>
+          )}
+          {notifyMsg && (
+            <span className="text-sm text-green-700">{notifyMsg}</span>
+          )}
           <button onClick={handleDownloadPDF} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -216,7 +244,7 @@ export default function OriginalPO() {
               </div>
               <div>
                 <span className="text-gray-500">Estimated Cost:</span>
-                <span className="ml-2 font-medium">${po.intent.estimatedCost?.toLocaleString() || '0'}</span>
+                <span className="ml-2 font-medium">₹{po.intent.estimatedCost?.toLocaleString('en-IN') || '0'}</span>
               </div>
             </div>
           </div>
@@ -244,8 +272,8 @@ export default function OriginalPO() {
                     <td className="py-3 px-4 font-medium">{item.name}</td>
                     <td className="py-3 px-4 text-gray-500">{item.description || '-'}</td>
                     <td className="py-3 px-4 text-right">{item.quantity}</td>
-                    <td className="py-3 px-4 text-right">${item.unitPrice?.toFixed(2)}</td>
-                    <td className="py-3 px-4 text-right">${(item.quantity * item.unitPrice)?.toFixed(2)}</td>
+                    <td className="py-3 px-4 text-right">₹{item.unitPrice?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                    <td className="py-3 px-4 text-right">₹{(item.quantity * item.unitPrice)?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                   </tr>
                 ))}
               </tbody>
@@ -258,15 +286,15 @@ export default function OriginalPO() {
           <div className="w-72 space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-500">Subtotal:</span>
-              <span className="font-medium">${subtotal.toFixed(2)}</span>
+              <span className="font-medium">₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">Tax ({taxRate}%):</span>
-              <span className="font-medium">${taxAmount.toFixed(2)}</span>
+              <span className="font-medium">₹{taxAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between border-t border-gray-200 pt-2">
               <span className="text-gray-900 font-semibold">Grand Total:</span>
-              <span className="text-gray-900 font-bold text-lg">${grandTotal.toFixed(2)}</span>
+              <span className="text-gray-900 font-bold text-lg">₹{grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
             </div>
           </div>
         </div>

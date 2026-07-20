@@ -48,19 +48,16 @@ router.post(
 
       const { intent, supplier, totalAmount, deliveryDays, paymentTerms, validityDays, notes, quotationNumber } = req.body;
       let items = req.body.items || [];
+
+      if (typeof items === 'string') {
+        try {
+          items = JSON.parse(items);
+        } catch (parseError) {
+          items = [];
+        }
+      }
+
       if (!Array.isArray(items)) items = [items];
-      items = items
-        .map((item) => {
-          if (typeof item === 'string') {
-            try {
-              return JSON.parse(item);
-            } catch (parseError) {
-              return null;
-            }
-          }
-          return item;
-        })
-        .filter(Boolean);
 
       const processedItems = items
         .filter((item) => item && (item.name?.trim() || item.unitPrice || item.quantity || item.deliveryTime || item.warranty))
@@ -143,7 +140,15 @@ router.post(
       });
 
       await Intent.findByIdAndUpdate(intent, {
-        $push: { quotations: quotation._id },
+        $push: {
+          quotations: quotation._id,
+          statusHistory: {
+            status: 'PENDING_QUOTATION',
+            changedBy: req.user._id,
+            changedAt: new Date(),
+            remarks: `Quotation uploaded from ${supplierDoc.companyName}`,
+          },
+        },
       });
 
       const populated = await Quotation.findById(quotation._id)
@@ -194,7 +199,16 @@ router.put(
       });
 
       if (updates.items) {
-        updates.items = updates.items.map((item) => ({
+        let parsedItems = updates.items;
+        if (typeof parsedItems === 'string') {
+          try {
+            parsedItems = JSON.parse(parsedItems);
+          } catch (parseError) {
+            parsedItems = [];
+          }
+        }
+        if (!Array.isArray(parsedItems)) parsedItems = [parsedItems];
+        updates.items = parsedItems.map((item) => ({
           ...item,
           totalPrice: item.quantity * item.unitPrice,
         }));

@@ -33,8 +33,8 @@ const AdminDashboard = () => {
           dashboardApi.getAdminDashboard(),
           dashboardApi.getChartData(),
         ]);
-        setDashboardData(dashboardRes.data);
-        setChartData(chartRes.data);
+        setDashboardData(dashboardRes.data?.data || dashboardRes.data);
+        setChartData(chartRes.data?.data || chartRes.data);
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
       } finally {
@@ -68,9 +68,9 @@ const AdminDashboard = () => {
   ];
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'INR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value || 0);

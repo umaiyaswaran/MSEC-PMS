@@ -396,7 +396,7 @@ const EditIntent = () => {
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <span className="text-sm font-medium text-gray-700">Estimated Total Cost</span>
             <span className="text-2xl font-bold text-gray-900">
-              {estimatedCost.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+              {estimatedCost.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
             </span>
           </div>
         </div>

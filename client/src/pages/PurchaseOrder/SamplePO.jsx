@@ -28,7 +28,7 @@ export default function SamplePO() {
     try {
       setLoading(true);
       const response = await purchaseOrderApi.getPOById(id);
-      setPo(response.data?.data || response.data);
+      setPo(response.data?.data?.purchaseOrder || response.data?.data || response.data?.purchaseOrder || response.data);
     } catch (err) {
       setError(err.message || 'Failed to load purchase order');
     } finally {
@@ -69,9 +69,9 @@ export default function SamplePO() {
       setActionLoading(true);
       const response = await purchaseOrderApi.generateOriginal(id);
       const data = response.data?.data || response.data;
-      alert('Original PO generated: ' + (data?.purchaseOrder?.poNumber || 'Created'));
-      // optionally navigate to original PO page
-      if (data?.purchaseOrder?._id) navigate(`/admin/purchase-orders/${data.purchaseOrder._id}`);
+      const po = data?.purchaseOrder || data;
+      alert('Original PO generated: ' + (po?.poNumber || 'Created'));
+      if (po?._id) navigate(`/admin/purchase-orders/${po._id}/approve`);
     } catch (err) {
       alert('Failed to generate original PO: ' + (err.message || 'Unknown error'));
     } finally {
@@ -353,8 +353,8 @@ export default function SamplePO() {
           </div>
         )}
 
-        {/* Action Buttons */}
-        {isAdmin && (po.status === 'pending' || po.status === 'sent' || po.status === 'PENDING' || po.status === 'SAMPLE' || po.status === 'APPROVED') && (
+        {/* Action Buttons - Only for SAMPLE POs */}
+        {isAdmin && po.type === 'SAMPLE' && (po.status === 'pending' || po.status === 'sent' || po.status === 'PENDING' || po.status === 'SAMPLE') && (
           <div className="p-6 flex justify-end gap-3">
             <button
               onClick={handleReject}
@@ -370,16 +370,19 @@ export default function SamplePO() {
             >
               {actionLoading ? 'Processing...' : 'Approve'}
             </button>
-            {/* Generate Original PO (Admin after approval) */}
-            {po.type === 'SAMPLE' && po.adminApproval?.status === 'APPROVED' && (
-              <button
-                onClick={handleGenerateOriginal}
-                disabled={actionLoading}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-              >
-                {actionLoading ? 'Processing...' : 'Generate Original PO'}
-              </button>
-            )}
+          </div>
+        )}
+
+        {/* Generate Original PO - Shows after admin approval */}
+        {isAdmin && po.type === 'SAMPLE' && po.adminApproval?.status === 'APPROVED' && (
+          <div className="p-6 flex justify-end gap-3 border-t border-gray-200">
+            <button
+              onClick={handleGenerateOriginal}
+              disabled={actionLoading}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+            >
+              {actionLoading ? 'Processing...' : 'Generate Original PO'}
+            </button>
           </div>
         )}
 

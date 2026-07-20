@@ -5,6 +5,14 @@ import { Toaster } from 'react-hot-toast';
 import App from './App';
 import './index.css';
 
+if (import.meta.env.DEV) {
+  const originalConsoleWarn = console.warn;
+  console.warn = (...args) => {
+    if (args[0]?.includes?.('React Router Future Flag Warning')) return;
+    originalConsoleWarn(...args);
+  };
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />

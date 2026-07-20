@@ -6,7 +6,7 @@ const Footer = () => {
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between items-center">
           <p className="text-sm text-gray-500">
-            &copy; {currentYear} MSEC PMS. All rights reserved.
+            &copy; {currentYear} <span className="font-bold text-gray-800">MSEC PMS</span>. All rights reserved.
           </p>
           <div className="flex space-x-4 mt-2 sm:mt-0">
             <a

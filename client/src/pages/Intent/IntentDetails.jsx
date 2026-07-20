@@ -71,6 +71,8 @@ const IntentDetails = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const navPrefix = useNavPrefix();
+  const rolePrefix = user?.role === 'admin' ? '/admin' : user?.role === 'manager' ? '/manager' : '';
+  const effectivePrefix = navPrefix || rolePrefix;
   const [intent, setIntent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -106,9 +108,9 @@ const IntentDetails = () => {
   };
 
   const formatCurrency = (amount) => {
-    return Number(amount || 0).toLocaleString('en-US', {
+    return Number(amount || 0).toLocaleString('en-IN', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'INR',
     });
   };
 
@@ -124,12 +126,9 @@ const IntentDetails = () => {
         intentId: id,
         supplierId: intent.selectedSupplier?._id || intent.selectedSupplier,
       });
-      const po = response.data?.data || response.data?.purchaseOrder || response.data;
+      const po = response.data?.data?.purchaseOrder || response.data?.data || response.data?.purchaseOrder || response.data;
       if (po?._id) {
-        const destination = user?.role === 'admin'
-          ? `/admin/purchase-orders/${po._id}/approve`
-          : `${navPrefix}/purchase-orders/${po._id}`;
-        navigate(destination);
+        navigate(`${effectivePrefix}/purchase-orders/${po._id}`);
       } else {
         setError('Sample PO created but the details could not be opened.');
       }
@@ -142,7 +141,7 @@ const IntentDetails = () => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('en-US', {
+    return new Date(dateStr).toLocaleDateString('en-IN', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -151,7 +150,7 @@ const IntentDetails = () => {
 
   const formatDateTime = (dateStr) => {
     if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('en-US', {
+    return new Date(dateStr).toLocaleDateString('en-IN', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -165,7 +164,7 @@ const IntentDetails = () => {
   const canManagerApprove = intent?.status === 'PENDING_MANAGER_APPROVAL' && user?.role === 'manager';
   const canAdminApprove = intent?.status === 'PENDING_ADMIN_APPROVAL' && user?.role === 'admin';
   const canUploadQuotation = intent?.status === 'PENDING_QUOTATION' && (user?.role === 'manager' || user?.role === 'admin');
-  const canCreatePO = intent?.status === 'PENDING_PO' && (user?.role === 'manager' || user?.role === 'admin');
+  const canCompareQuotations = ['PENDING_QUOTATION', 'QUOTATION_COLLECTED', 'PENDING_PO'].includes(intent?.status) && (user?.role === 'manager' || user?.role === 'admin') && (intent?.quotations?.length > 0);
   const canCreateSamplePO = ['PENDING_PO', 'QUOTATION_COLLECTED', 'SAMPLE_PO_CREATED'].includes(intent?.status) && (user?.role === 'manager' || user?.role === 'admin') && !!intent?.selectedSupplier;
   const canCreateOriginalPO = intent?.status === 'PO_APPROVED' && user?.role === 'admin';
   const canUploadDelivery = ['PO_SENT', 'DELIVERY_PENDING', 'PARTIAL_DELIVERY'].includes(intent?.status) && user?.role === 'admin';
@@ -178,7 +177,7 @@ const IntentDetails = () => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
           <p className="text-red-600">{error}</p>
-          <Button variant="primary" className="mt-4" onClick={() => navigate(`${navPrefix}/intents`)}>
+          <Button variant="primary" className="mt-4" onClick={() => navigate(`${effectivePrefix}/intents`)}>
             Back to Intents
           </Button>
         </div>
@@ -191,7 +190,7 @@ const IntentDetails = () => {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="mb-6">
-        <Link to={`${navPrefix}/intents`} className="text-sm text-blue-600 hover:text-blue-500 flex items-center mb-4">
+        <Link to={`${effectivePrefix}/intents`} className="text-sm text-blue-600 hover:text-blue-500 flex items-center mb-4">
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
@@ -214,7 +213,7 @@ const IntentDetails = () => {
 
           <div className="mt-4 sm:mt-0 flex items-center space-x-3">
             {canEdit && (
-              <Button variant="outline" size="sm" onClick={() => navigate(`${navPrefix}/intents/${id}/edit`)}>
+              <Button variant="outline" size="sm" onClick={() => navigate(`${effectivePrefix}/intents/${id}/edit`)}>
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
@@ -245,12 +244,12 @@ const IntentDetails = () => {
               </Button>
             )}
             {canUploadQuotation && (
-              <Button variant="primary" size="sm" onClick={() => navigate(`/manager/quotations/upload/${id}`)}>
+              <Button variant="primary" size="sm" onClick={() => navigate(`${effectivePrefix}/quotations/upload/${id}`)}>
                 Upload Quotation
               </Button>
             )}
-            {canCreatePO && (
-              <Button variant="primary" size="sm" onClick={() => navigate(`/manager/quotations/compare/${id}`)}>
+            {canCompareQuotations && (
+              <Button variant="primary" size="sm" onClick={() => navigate(`${effectivePrefix}/quotations/compare/${id}`)}>
                 Compare Quotations
               </Button>
             )}

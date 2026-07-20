@@ -93,10 +93,10 @@ export default function POHistory() {
   };
 
   const handleView = (po) => {
-    if (po.type === 'sample') {
-      navigate(`${navPrefix}/purchase-orders/${po._id}`);
-    } else {
+    if (po.type === 'ORIGINAL' || po.type === 'original') {
       navigate(`${navPrefix}/purchase-orders/${po._id}/approve`);
+    } else {
+      navigate(`${navPrefix}/purchase-orders/${po._id}`);
     }
   };
 
@@ -219,7 +219,7 @@ export default function POHistory() {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right font-medium">
-                      ${po.grandTotal?.toFixed(2) || '0.00'}
+                      ₹{po.grandTotal?.toLocaleString('en-IN', { minimumFractionDigits: 2 }) || '0.00'}
                     </td>
                     <td className="py-3 px-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(po.status)}`}>

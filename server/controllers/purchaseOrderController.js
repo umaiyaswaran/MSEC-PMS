@@ -1,4 +1,4 @@
-const { PurchaseOrder, Intent, Supplier, User, AuditLog } = require('../models/index');
+const { PurchaseOrder, Intent, Supplier, User, AuditLog, Notification } = require('../models/index');
 const { successResponse, errorResponse, paginatedResponse } = require('../utils/response');
 const { PO_STATUSES, INTENT_STATUSES } = require('../utils/constants');
 
@@ -447,11 +447,25 @@ const generateOriginalPO = async (req, res) => {
       return errorResponse(res, 400, 'Sample PO must be approved before generating original PO');
     }
 
+    const existingOriginal = await PurchaseOrder.findOne({
+      intent: samplePO.intent,
+      type: 'ORIGINAL',
+    });
+    if (existingOriginal) {
+      return errorResponse(res, 400, `Original PO already exists: ${existingOriginal.poNumber}. Cannot generate another.`);
+    }
+
     const po = await PurchaseOrder.create({
       intent: samplePO.intent,
       supplier: samplePO.supplier,
       type: 'ORIGINAL',
-      items: samplePO.items,
+      items: samplePO.items.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice: item.totalPrice,
+        description: item.description,
+      })),
       totalAmount: samplePO.totalAmount,
       tax: samplePO.tax,
       grandTotal: samplePO.grandTotal,
@@ -466,9 +480,6 @@ const generateOriginalPO = async (req, res) => {
         remarks: 'Original PO generated from approved sample PO',
         status: 'APPROVED',
       },
-      statusHistory: [
-        { status: PO_STATUSES.APPROVED, changedBy: req.user._id, changedAt: new Date(), remarks: 'Original PO created from approved sample' },
-      ],
     });
 
     await Intent.findByIdAndUpdate(samplePO.intent, {
@@ -484,6 +495,19 @@ const generateOriginalPO = async (req, res) => {
       newData: { poNumber: po.poNumber, type: 'ORIGINAL', samplePOId: samplePO._id },
       ipAddress: req.ip,
     });
+
+    const storeManagers = await User.find({ role: 'store_manager', isActive: true });
+    for (const manager of storeManagers) {
+      await Notification.create({
+        recipient: manager._id,
+        sender: req.user._id,
+        title: 'New Original PO Ready for GRN',
+        message: `Original purchase order ${po.poNumber} has been created and is ready for goods receipt processing.`,
+        type: 'INFO',
+        referenceModel: 'PurchaseOrder',
+        referenceId: po._id,
+      });
+    }
 
     const populated = await PurchaseOrder.findById(po._id)
       .populate('intent', 'intentId title description')

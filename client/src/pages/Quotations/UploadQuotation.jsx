@@ -3,13 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import quotationApi from '../../api/quotationApi';
 import supplierApi from '../../api/supplierApi';
 import intentApi from '../../api/intentApi';
-import { FormInput, FormSelect, FormTextArea, Button, FileUpload, Loader } from '../../components';
+import { FormInput, FormSelect, Button, Loader } from '../../components';
 import useNavPrefix from '../../hooks/useNavPrefix';
 
 const EMPTY_ITEM = {
   name: '',
-  quantity: 1,
-  unitPrice: 0,
+  quantity: '',
+  unitPrice: '',
   deliveryTime: '',
   warranty: '',
 };
@@ -21,7 +21,6 @@ const UploadQuotation = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
-  const [files, setFiles] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [intent, setIntent] = useState(null);
 
@@ -40,11 +39,12 @@ const UploadQuotation = () => {
           supplierApi.getActiveSuppliers(),
           intentApi.getIntentById(intentId),
         ]);
-        setSuppliers(supplierRes.data?.suppliers || supplierRes.data || []);
-        setIntent(intentRes.data?.intent || intentRes.data || null);
+        setSuppliers(supplierRes.data?.data?.suppliers || supplierRes.data?.suppliers || []);
+        setIntent(intentRes.data?.data?.intent || intentRes.data?.intent || null);
 
-        if (intentRes.data?.intent?.items || intentRes.data?.items) {
-          const intentItems = intentRes.data?.intent?.items || intentRes.data?.items || [];
+        const intentData = intentRes.data?.data?.intent || intentRes.data?.intent || intentRes.data;
+        if (intentData?.items) {
+          const intentItems = intentData.items;
           if (intentItems.length > 0) {
             setForm((prev) => ({
               ...prev,
@@ -102,10 +102,6 @@ const UploadQuotation = () => {
     }));
   };
 
-  const handleFileSelect = (selectedFiles) => {
-    setFiles(Array.isArray(selectedFiles) ? selectedFiles : selectedFiles ? [selectedFiles] : []);
-  };
-
   const validate = () => {
     const newErrors = {};
     const supplierName = form.supplier?.trim();
@@ -115,20 +111,20 @@ const UploadQuotation = () => {
     if (!form.quotationNumber.trim()) newErrors.quotationNumber = 'Quotation number is required';
     if (!form.paymentTerms.trim()) newErrors.paymentTerms = 'Payment terms are required';
 
-    const hasItems = form.items.some((item) => {
-      const quantity = parseFloat(item.quantity) || 0;
-      const unitPrice = parseFloat(item.unitPrice) || 0;
-      return quantity > 0 && unitPrice > 0;
+    const enteredItems = form.items.filter((item) => {
+      const hasAnyValue = item.name.trim() || item.quantity !== '' || item.unitPrice !== '';
+      return hasAnyValue;
     });
-    if (!hasItems) {
+
+    if (!enteredItems.length) {
       newErrors.items = 'Enter item prices for quotation items';
     }
 
-    form.items.forEach((item, idx) => {
+    enteredItems.forEach((item, idx) => {
       const quantity = parseFloat(item.quantity) || 0;
       const unitPrice = parseFloat(item.unitPrice) || 0;
-      if ((item.name.trim() || quantity > 0 || unitPrice > 0) && (quantity <= 0 || unitPrice <= 0)) {
-        newErrors[`item_${idx}_unitPrice`] = 'Quantity and unit price are required for items with values';
+      if (quantity <= 0 || unitPrice <= 0) {
+        newErrors[`item_${idx}_unitPrice`] = 'Quantity and unit price are required for each item';
       }
     });
 
@@ -166,7 +162,6 @@ const UploadQuotation = () => {
         totalAmount,
         paymentTerms: form.paymentTerms,
         validityDays: form.validityDays ? parseInt(form.validityDays, 10) : undefined,
-        documents: files,
       };
       await quotationApi.uploadQuotation(payload);
       navigate(`${navPrefix}/intents/${intentId}`);
@@ -340,9 +335,9 @@ const UploadQuotation = () => {
                     <div className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
                       <span className="text-xs text-gray-500">Total</span>
                       <p className="text-sm font-semibold text-gray-900">
-                        {((parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0)).toLocaleString('en-US', {
+                        {((parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0)).toLocaleString('en-IN', {
                           style: 'currency',
-                          currency: 'USD',
+                          currency: 'INR',
                         })}
                       </p>
                     </div>
@@ -354,21 +349,11 @@ const UploadQuotation = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Supporting Documents</h2>
-          <FileUpload
-            accept=".pdf,.jpg,.jpeg,.png"
-            onFileSelect={handleFileSelect}
-            multiple
-            maxSize={10 * 1024 * 1024}
-          />
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Total Amount</h2>
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <span className="text-sm font-medium text-gray-700">Quotation Total</span>
             <span className="text-2xl font-bold text-gray-900">
-              {totalAmount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+              {totalAmount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
             </span>
           </div>
         </div>

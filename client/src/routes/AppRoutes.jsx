@@ -117,7 +117,7 @@ const AppRoutes = () => {
           <Route path="/manager/approvals/:id/reject" element={<RejectIntent />} />
           <Route path="/manager/quotations/upload/:intentId" element={<UploadQuotation />} />
           <Route path="/manager/quotations/compare/:intentId" element={<CompareQuotation />} />
-          <Route path="/manager/quotations/select/:quotationId" element={<SelectSupplier />} />
+          <Route path="/manager/quotations/select/:intentId/:quotationId" element={<SelectSupplier />} />
           <Route path="/manager/intents" element={<IntentList />} />
           <Route path="/manager/intents/:id" element={<IntentDetails />} />
           <Route path="/manager/suppliers" element={<SupplierList />} />
@@ -145,7 +145,11 @@ const AppRoutes = () => {
           <Route path="/admin/suppliers/:id" element={<SupplierProfile />} />
           <Route path="/admin/suppliers/:id/edit" element={<EditSupplier />} />
           <Route path="/admin/purchase-orders" element={<POHistory />} />
+          <Route path="/admin/purchase-orders/:id" element={<SamplePO />} />
           <Route path="/admin/purchase-orders/:id/approve" element={<OriginalPO />} />
+          <Route path="/admin/quotations/upload/:intentId" element={<UploadQuotation />} />
+          <Route path="/admin/quotations/compare/:intentId" element={<CompareQuotation />} />
+          <Route path="/admin/quotations/select/:intentId/:quotationId" element={<SelectSupplier />} />
           <Route path="/admin/purchase-orders/:id/print" element={<PrintPO />} />
           <Route path="/admin/deliveries" element={<DeliveryList />} />
           <Route path="/admin/deliveries/:id/partial" element={<PartialDelivery />} />

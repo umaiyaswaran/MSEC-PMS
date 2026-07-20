@@ -21,10 +21,14 @@ const OpenPurchaseOrders = () => {
           : data.data?.purchaseOrders || data.purchaseOrders || [];
 
         const openOrders = (orders || []).filter((order) =>
-          ['OPEN', 'PARTIALLY_RECEIVED'].includes(order.status)
+          order.type === 'ORIGINAL' && ['OPEN', 'PARTIALLY_RECEIVED', 'APPROVED'].includes(order.status)
         );
 
-        setPurchaseOrders(openOrders);
+        const uniqueOrders = openOrders.filter((order, index, self) =>
+          index === self.findIndex((o) => o._id === order._id)
+        );
+
+        setPurchaseOrders(uniqueOrders);
       } catch (err) {
         console.error('Failed to fetch open purchase orders:', err);
         setError('Unable to load open purchase orders at this time.');
@@ -42,6 +46,19 @@ const OpenPurchaseOrders = () => {
 
   const columns = [
     { key: 'poNumber', label: 'PO Number' },
+    {
+      key: 'type',
+      label: 'Type',
+      render: (value) => (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+          value === 'ORIGINAL' ? 'bg-green-100 text-green-800' :
+          value === 'SAMPLE' ? 'bg-blue-100 text-blue-800' :
+          'bg-gray-100 text-gray-800'
+        }`}>
+          {value || 'N/A'}
+        </span>
+      ),
+    },
     {
       key: 'supplier',
       label: 'Supplier',

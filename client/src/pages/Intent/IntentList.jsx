@@ -173,7 +173,7 @@ const IntentList = () => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('en-US', {
+    return new Date(dateStr).toLocaleDateString('en-IN', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -181,9 +181,9 @@ const IntentList = () => {
   };
 
   const formatCurrency = (amount) => {
-    return Number(amount || 0).toLocaleString('en-US', {
+    return Number(amount || 0).toLocaleString('en-IN', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'INR',
     });
   };
 

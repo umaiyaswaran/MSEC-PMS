@@ -56,7 +56,7 @@ const IntentTimeline = ({ currentStatus, statusHistory = [] }) => {
   const formatDateTime = (dateStr) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('en-IN', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
